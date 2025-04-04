@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio de Consultores</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="banner"></div>
+    <div class="container">
+        <h1>Sorteio de Consultores</h1>
+        <button id="sortearBtn" onclick="iniciarSorteio()">Sortear</button>
+        <div id="mensagem" class="mensagem"></div>
+        <div id="loading-icon" class="loading-icon">
+            <svg width="50" height="50" viewBox="0 0 100 100">
+                <path d="M20,50 Q40,30 50,50 T80,50" stroke="#0288d1" stroke-width="8" fill="none" class="wave" />
+            </svg>
+        </div>
+        <div id="resultado" class="resultado"></div>
+    </div>
+    <button id="limparBtn" onclick="limparTela()" class="limpar-btn">Limpar</button>
+
+    <script>
+        function iniciarSorteio() {
+            const botao = document.getElementById('sortearBtn');
+            botao.disabled = true;
+
+            const resultado = document.getElementById('resultado');
+            resultado.textContent = '';
+            resultado.style.display = 'none';
+
+            const mensagemDiv = document.getElementById('mensagem');
+            const loadingIcon = document.getElementById('loading-icon');
+            mensagemDiv.style.display = 'block';
+            loadingIcon.style.display = 'block';
+
+            const mensagens = [
+                { texto: "Consultando nomes dos sorteados...", tempo: 2000 },
+                { texto: "Consultando a sorte de todos no universo...", tempo: 2000 },
+                { texto: "Tomando uma aguinha antes de aparecer o nome...", tempo: 2000 },
+                { texto: "Pronto, estão preparados?", tempo: 2000 },
+                { texto: "E o grande vencedor(a) é...", tempo: 4000 }
+            ];
+
+            let indiceMensagem = 0;
+            let vencedorData = null;
+
+            fetch('/sortear')
+                .then(response => response.json())
+                .then(data => {
+                    vencedorData = data;
+                });
+
+            function exibirProximaMensagem() {
+                if (indiceMensagem < mensagens.length) {
+                    mensagemDiv.textContent = mensagens[indiceMensagem].texto;
+                    setTimeout(exibirProximaMensagem, mensagens[indiceMensagem].tempo);
+                    indiceMensagem++;
+                } else {
+                    mensagemDiv.style.display = 'none';
+                    loadingIcon.style.display = 'none';
+                    resultado.innerHTML = `Vencedor: ${vencedorData.vencedor}<br><span class="email">${vencedorData.email}</span>`;
+                    resultado.style.display = 'block';
+                    dispararConfete();
+                    botao.disabled = false;
+                }
+            }
+
+            exibirProximaMensagem();
+        }
+
+        function limparTela() {
+            const resultado = document.getElementById('resultado');
+            resultado.textContent = '';
+            resultado.style.display = 'none';
+        }
+
+        function dispararConfete() {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+            setTimeout(() => {
+                confetti({
+                    particleCount: 50,
+                    spread: 90,
+                    origin: { y: 0.8 }
+                });
+            }, 500);
+        }
+    </script>
+</body>
+</html>
